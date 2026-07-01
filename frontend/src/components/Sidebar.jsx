@@ -9,6 +9,7 @@ export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
   const { users, getUsers, selectedUser, selectUser, onlineUsers } = useChatStore()
   const { user, logout, updateProfile } = useAuthStore()
   const [uploading, setUploading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -81,11 +82,18 @@ export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
         </div>
 
         <div className="search-box">
-          <input type="text" placeholder="Search users..." />
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         <div className="users-list">
-          {users.map((u) => (
+          {users
+            .filter((u) => u.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            .map((u) => (
             <div
               key={u._id}
               className={`user-item ${selectedUser?._id === u._id ? 'active' : ''}`}
@@ -109,7 +117,10 @@ export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
               </div>
             </div>
           ))}
-          {users.length === 0 && <p className="no-users">No users found</p>}
+          {users.length === 0 && <p className="no-users">No users yet</p>}
+          {searchQuery && users.filter((u) => u.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && users.length > 0 && (
+            <p className="no-users">No users matching "{searchQuery}"</p>
+          )}
         </div>
       </div>
     </>
