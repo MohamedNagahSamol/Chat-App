@@ -1,4 +1,4 @@
-import axios from 'axios'
+import api from '../utils/axios'
 import { create } from 'zustand'
 import { io } from 'socket.io-client'
 
@@ -35,12 +35,12 @@ const useChatStore = create((set, get) => ({
   },
 
   getUsers: async () => {
-    const { data } = await axios.get('/api/message/user')
+    const { data } = await api.get('/api/message/user')
     set({ users: data.user })
   },
 
   getMessages: async (userId) => {
-    const { data } = await axios.get(`/api/message/${userId}`)
+    const { data } = await api.get(`/api/message/${userId}`)
     set({ messages: data.conversations || [] })
   },
 
@@ -49,13 +49,13 @@ const useChatStore = create((set, get) => ({
       const formData = new FormData()
       formData.append('message', message)
       formData.append(mediaType || 'image', file)
-      const { data } = await axios.post(`/api/message/send/${userId}`, formData, {
+      const { data } = await api.post(`/api/message/send/${userId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       set((state) => ({ messages: [...state.messages, data.newMessage] }))
       return data
     }
-    const { data } = await axios.post(`/api/message/send/${userId}`, { message, image: file })
+    const { data } = await api.post(`/api/message/send/${userId}`, { message, image: file })
     set((state) => ({ messages: [...state.messages, data.newMessage] }))
     return data
   },
