@@ -2,12 +2,21 @@ import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://chat-app-3kx9.vercel.app"
+];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"], // Default Vite React client port
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 

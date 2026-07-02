@@ -10,7 +10,7 @@ const useChatStore = create((set, get) => ({
   onlineUsers: [],
 
   connectSocket: (userId) => {
-    const socket = io('/', { query: { userId } })
+    const socket = io(import.meta.env.VITE_API_URL || '/', { query: { userId } })
     set({ socket })
 
     socket.on('getOnlineUsers', (users) => {

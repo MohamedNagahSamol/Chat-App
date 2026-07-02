@@ -20,6 +20,7 @@ const register = async (req, res) => {
     }
     const newUser = await authModule.create({ email, password, name });
     const token = genrateToken(newUser._id, res);
+    console.log(token);
     res.status(201).json({ success: true, message: "Register successfully", token });
   } catch (error) {
     console.log(error);
