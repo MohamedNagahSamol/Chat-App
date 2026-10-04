@@ -50,11 +50,13 @@ const login = async (req, res) => {
 };
 const logout = async (req, res) => {
   try {
-    const cookies = req.cookies.jwt;
-    if (!cookies) {
-      return res.status(204).json({ message: "Unauthorized", success: false });
-    }
-    res.clearCookie("jwt", { httpOnly: true });
+    const isProduction = process.env.NODE_ENV === "production";
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction,
+      path: "/",
+    });
     res.status(200).json({ message: "logout successfuly", success: true });
   } catch (error) {
     console.log(error);
