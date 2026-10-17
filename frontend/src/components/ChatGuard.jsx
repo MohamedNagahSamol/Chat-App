@@ -1,12 +1,9 @@
-import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 
 export default function ChatGuard({ children }) {
-    const { user, loading, checkAuth } = useAuthStore()
-    useEffect(() => {
-        checkAuth()
-    }, [checkAuth])
+    const { user, loading } = useAuthStore()
+    
     if (loading) {
         return (
             <div className="loading-screen">

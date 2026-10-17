@@ -11,6 +11,10 @@ export const genrateToken = (userId, res) => {
     sameSite: isProduction ? "none" : "lax",
     maxAge: 86400000 * 7,
     secure: isProduction,
+    path: "/",
   });
-  return token
+  return token;
 };
+
+export const generateTokenAndSetCookie = genrateToken;
+export const generateToken = genrateToken;

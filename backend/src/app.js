@@ -10,21 +10,61 @@ process.on("unhandledRejection", (err) => {
   console.error("[CRASH PREVENT] unhandledRejection:", err.message);
 });
 
+process.on("uncaughtException", (err) => {
+  console.error("[CRASH PREVENT] uncaughtException:", err.message);
+});
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://chat-app-3kx9.vercel.app"
-];
-if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
-}
+// Dynamic origin validation helper
+const isAllowedOrigin = (origin) => {
+  // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+  if (!origin) return true;
+
+  // Accept localhost or 127.0.0.1 on any port
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    return true;
+  }
+
+  // Accept any *.vercel.app domain (including preview deployments and production)
+  if (/^https:\/\/([a-zA-Z0-9_-]+\.)*vercel\.app$/.test(origin)) {
+    return true;
+  }
+
+  // Accept configured origins from FRONTEND_URL or CLIENT_URL (supports comma-separated list)
+  const envOrigins = [process.env.FRONTEND_URL, process.env.CLIENT_URL]
+    .filter(Boolean)
+    .flatMap((val) => val.split(",").map((s) => s.trim().replace(/\/$/, "")));
+
+  const normalized = origin.replace(/\/$/, "");
+  if (envOrigins.includes(normalized)) {
+    return true;
+  }
+
+  // Default known production / development origins
+  const staticOrigins = [
+    "http://localhost:5173",
+    "https://chat-app-3kx9.vercel.app",
+  ];
+  if (staticOrigins.includes(normalized)) {
+    return true;
+  }
+
+  return false;
+};
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
+    optionsSuccessStatus: 200,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })

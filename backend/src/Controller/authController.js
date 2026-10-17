@@ -140,7 +140,13 @@ const deleteAccount = async (req, res) => {
     const userId = req.user._id;
     await messageModule.deleteMany({ $or: [{ senderId: userId }, { receiverId: userId }] });
     await authModule.findByIdAndDelete(userId);
-    res.clearCookie("jwt", { httpOnly: true });
+    const isProduction = process.env.NODE_ENV === "production";
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction,
+      path: "/",
+    });
     res.status(200).json({ success: true, message: "Account deleted successfully" });
   } catch (error) {
     console.log(error);

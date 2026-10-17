@@ -4,23 +4,48 @@ import { create } from 'zustand'
 const useAuthStore = create((set, get) => ({
   user: null,
   loading: true,
+  authChecked: false,
+  authRequestId: 0,
 
   checkAuth: async () => {
+    const { authChecked, authRequestId } = get()
+    if (authChecked) return
+    
     try {
       const { data } = await api.get('/api/auth/check')
-      set({ user: data, loading: false })
+      if (get().authRequestId === authRequestId) {
+        set({ user: data, loading: false, authChecked: true })
+      }
     } catch {
-      set({ user: null, loading: false })
+      if (get().authRequestId === authRequestId) {
+        set({ user: null, loading: false, authChecked: true })
+      }
     }
   },
 
   login: async (email, password) => {
-    await api.post('/api/auth/login', { email, password })
+    const res = await api.post('/api/auth/login', { email, password })
+    if (res.data?.token) {
+      localStorage.setItem('token', res.data.token)
+    }
+    set((state) => ({
+      authChecked: false,
+      loading: true,
+      authRequestId: state.authRequestId + 1,
+    }))
     await get().checkAuth()
   },
 
   register: async (name, email, password) => {
-    await api.post('/api/auth/register', { name, email, password })
+    const res = await api.post('/api/auth/register', { name, email, password })
+    if (res.data?.token) {
+      localStorage.setItem('token', res.data.token)
+    }
+    set((state) => ({
+      authChecked: false,
+      loading: true,
+      authRequestId: state.authRequestId + 1,
+    }))
     await get().checkAuth()
   },
 
@@ -38,18 +63,39 @@ const useAuthStore = create((set, get) => ({
   },
 
   googleLogin: async (credential) => {
-    await api.post('/api/auth/google', { credential })
+    const res = await api.post('/api/auth/google', { credential })
+    if (res.data?.token) {
+      localStorage.setItem('token', res.data.token)
+    }
+    set((state) => ({
+      authChecked: false,
+      loading: true,
+      authRequestId: state.authRequestId + 1,
+    }))
     await get().checkAuth()
   },
 
   deleteAccount: async () => {
-    await api.delete('/api/auth/delete-account')
-    set({ user: null })
+    try {
+      await api.delete('/api/auth/delete-account')
+    } finally {
+      localStorage.removeItem('token')
+      set({ user: null })
+    }
   },
 
   logout: async () => {
-    await api.post('/api/auth/logout')
-    set({ user: null })
+    try {
+      await api.post('/api/auth/logout')
+    } finally {
+      localStorage.removeItem('token')
+      set((state) => ({
+        user: null,
+        loading: false,
+        authChecked: true,
+        authRequestId: state.authRequestId + 1,
+      }))
+    }
   },
 }))
 

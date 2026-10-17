@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import useChatStore from '../store/chatStore'
 import useAuthStore from '../store/authStore'
 import { Users, LogOut, Camera, X } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
   const navigate = useNavigate()
   const { users, getUsers, selectedUser, selectUser, onlineUsers } = useChatStore()
   const { user, logout, updateProfile } = useAuthStore()
   const [uploading, setUploading] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const fileInputRef = useRef(null)
 
@@ -34,26 +36,52 @@ export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
     onCloseSidebar()
   }
 
+  const handleLogout = async () => {
+    if (loggingOut) return
+    setLoggingOut(true)
+    try {
+      await logout()
+      navigate('/login', { replace: true })
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Logout failed')
+    } finally {
+      setLoggingOut(false)
+    }
+  }
+
   return (
     <>
       <div className={`sidebar-backdrop ${isSidebarOpen ? 'visible' : ''}`} onClick={onCloseSidebar} />
-      <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} aria-label="Sidebar">
         <div className="sidebar-header">
           <h2>
             <Users size={20} /> OBJ Chat
           </h2>
           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-            <button className="close-sidebar-btn" onClick={onCloseSidebar} title="Close">
+            <button className="close-sidebar-btn" onClick={onCloseSidebar} title="Close" aria-label="Close sidebar">
               <X size={18} />
             </button>
-            <button className="logout-btn" onClick={logout} title="Logout">
+            <button
+              className="logout-btn"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              title="Logout"
+              aria-label="Log out"
+            >
               <LogOut size={18} />
             </button>
           </div>
         </div>
 
         <div className="sidebar-user-info">
-          <div className="avatar" onClick={() => fileInputRef.current?.click()}>
+          <div
+            className="avatar"
+            onClick={() => fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            aria-label="Change profile photo"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click() }}
+          >
             {user?.pimage ? (
               <img src={user.pimage} alt={user.name} />
             ) : (
@@ -69,7 +97,13 @@ export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
               </div>
             )}
           </div>
-          <span className="sidebar-own-name" onClick={() => navigate(`/profile/${user?._id}`)}>
+          <span
+            className="sidebar-own-name"
+            onClick={() => navigate(`/profile/${user?._id}`)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/profile/${user?._id}`) }}
+          >
             {user?.name}
           </span>
           <input
@@ -85,6 +119,7 @@ export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
           <input
             type="text"
             placeholder="Search users..."
+            aria-label="Search users"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -98,6 +133,15 @@ export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
               key={u._id}
               className={`user-item ${selectedUser?._id === u._id ? 'active' : ''}`}
               onClick={() => handleSelectUser(u)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Chat with ${u.name}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleSelectUser(u)
+                }
+              }}
             >
               <div className="user-avatar-wrap">
                 <div className="avatar small">
@@ -122,7 +166,7 @@ export default function Sidebar({ isSidebarOpen, onCloseSidebar }) {
             <p className="no-users">No users matching "{searchQuery}"</p>
           )}
         </div>
-      </div>
+      </aside>
     </>
   )
 }

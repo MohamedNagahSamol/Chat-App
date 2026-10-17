@@ -1,13 +1,8 @@
-import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
 
 export default function AuthGuard({ children }) {
-  const { checkAuth, user, loading } = useAuthStore()
-
-  useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+  const { user, loading } = useAuthStore()
 
   if (loading) {
     return (

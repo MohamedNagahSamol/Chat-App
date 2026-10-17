@@ -21,9 +21,9 @@ export default function ChatPage() {
   const closeSidebar = () => setSidebarOpen(false)
 
   return (
-    <div className="chat-layout">
+    <main className="chat-layout">
       <Sidebar isSidebarOpen={sidebarOpen} onCloseSidebar={closeSidebar} />
       <ChatArea onToggleSidebar={toggleSidebar} />
-    </div>
+    </main>
   )
 }

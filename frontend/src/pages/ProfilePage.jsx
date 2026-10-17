@@ -10,7 +10,6 @@ export default function ProfilePage() {
   const navigate = useNavigate()
   const currentUser = useAuthStore((s) => s.user)
   const deleteAccount = useAuthStore((s) => s.deleteAccount)
-  const logout = useAuthStore((s) => s.logout)
   const { users, getUsers, selectUser, onlineUsers } = useChatStore()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteConfirmName, setDeleteConfirmName] = useState('')
@@ -18,16 +17,16 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (users.length === 0) getUsers()
-  }, [])
+  }, [users.length, getUsers])
 
   const isOwnProfile = currentUser?._id === userId
   const user = isOwnProfile ? currentUser : users.find((u) => u._id === userId)
 
   if (!user) {
     return (
-      <div className="profile-page">
+      <main className="profile-page">
         <div className="spinner" />
-      </div>
+      </main>
     )
   }
 
@@ -37,8 +36,8 @@ export default function ProfilePage() {
     : null
 
   return (
-    <div className="profile-page">
-      <button className="profile-back" onClick={() => navigate('/chat')}>
+    <main className="profile-page">
+      <button className="profile-back" onClick={() => navigate('/chat')} aria-label="Back to chat">
         <ArrowLeft size={18} />
         Back
       </button>
@@ -114,20 +113,29 @@ export default function ProfilePage() {
 
       {showDeleteModal && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-card"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-account-modal-title"
+          >
             <div className="modal-icon">
               <AlertTriangle size={24} />
             </div>
-            <h3 className="modal-title">Delete Account</h3>
+            <h3 className="modal-title" id="delete-account-modal-title">Delete Account</h3>
             <p className="modal-desc">
               This will permanently delete your account and all your messages. This action cannot be undone.
             </p>
-            <label className="modal-label">
+            <label className="modal-label" htmlFor="delete-confirm-input">
               Type <strong>{currentUser?.name}</strong> to confirm
             </label>
             <input
+              id="delete-confirm-input"
               className="modal-input"
               type="text"
+              aria-label="Confirm deletion by typing your name"
+              disabled={deleting}
               placeholder={currentUser?.name}
               value={deleteConfirmName}
               onChange={(e) => setDeleteConfirmName(e.target.value)}
@@ -135,6 +143,7 @@ export default function ProfilePage() {
             <div className="modal-actions">
               <button
                 className="modal-btn modal-btn-cancel"
+                disabled={deleting}
                 onClick={() => { setShowDeleteModal(false); setDeleteConfirmName('') }}
               >
                 Cancel
@@ -157,12 +166,19 @@ export default function ProfilePage() {
                   }
                 }}
               >
-                {deleting ? 'Deleting…' : 'Delete Forever'}
+                {deleting ? (
+                  <>
+                    <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                    <span>Deleting…</span>
+                  </>
+                ) : (
+                  'Delete Forever'
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </main>
   )
 }

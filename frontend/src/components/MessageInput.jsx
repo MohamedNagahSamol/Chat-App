@@ -53,7 +53,11 @@ export default function MessageInput() {
           ) : (
             <img src={URL.createObjectURL(mediaFile)} alt="Preview" />
           )}
-          <button type="button" onClick={() => { setMediaFile(null); setMediaType(null) }}>
+          <button
+            type="button"
+            onClick={() => { setMediaFile(null); setMediaType(null) }}
+            aria-label="Remove attachment"
+          >
             <X size={18} />
           </button>
         </div>
@@ -62,8 +66,10 @@ export default function MessageInput() {
         <input
           type="text"
           placeholder="Type a message..."
+          aria-label="Type a message"
           value={text}
           onChange={(e) => setText(e.target.value)}
+          disabled={sending}
         />
         <input
           type="file"
@@ -79,14 +85,34 @@ export default function MessageInput() {
           onChange={handleVideoChange}
           hidden
         />
-        <button type="button" className="image-btn" onClick={() => imageRef.current?.click()}>
+        <button
+          type="button"
+          className="image-btn"
+          onClick={() => imageRef.current?.click()}
+          aria-label="Attach image"
+          disabled={sending}
+        >
           <Image size={20} />
         </button>
-        <button type="button" className="image-btn" onClick={() => videoRef.current?.click()}>
+        <button
+          type="button"
+          className="image-btn"
+          onClick={() => videoRef.current?.click()}
+          aria-label="Attach video"
+          disabled={sending}
+        >
           <Video size={20} />
         </button>
-        <button type="submit" disabled={(!text.trim() && !mediaFile) || sending}>
-          <Send size={20} />
+        <button
+          type="submit"
+          disabled={(!text.trim() && !mediaFile) || sending}
+          aria-label="Send message"
+        >
+          {sending ? (
+            <span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+          ) : (
+            <Send size={20} />
+          )}
         </button>
       </form>
     </>
